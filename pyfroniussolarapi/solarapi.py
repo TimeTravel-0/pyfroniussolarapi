@@ -6,11 +6,14 @@ import datetime
 import matplotlib
 
 class solarapi:
-    def __init__(self,host):
+    def __init__(self,host,verbose=False):
         self.host = host
+        self.verbose = verbose
         return
 
     def PrintFormatted(self,paramdict):
+        if not self.verbose:
+            return
         print ">"*80
         for item in paramdict:
 
@@ -35,14 +38,16 @@ class solarapi:
         full_url = "http://"+self.host+url+"?"+urllib.urlencode(params)
         data = json.loads(urllib2.urlopen(full_url).read())
 
-        print "---- "+full_url+" ----"
+        if self.verbose:
+            print "---- "+full_url+" ----"
 
         errorcode = data["Head"]["Status"]["Code"]
         errortext = data["Head"]["Status"]["Reason"]
 
 
         if not "Body" in data.keys() or errorcode >0:
-            print "%i - %s"%(errorcode,errortext)
+            if self.verbose:
+                print "%i - %s"%(errorcode,errortext)
             return False
 
         body = data["Body"]
@@ -120,11 +125,35 @@ class solarapi:
         print body["Data"]
         return body
 
+    def GetAllArchiveData(self):
+        archive_fetchem = ["TimeSpanInSec",\
+        #"Digital_PowerManagementRelay_Out_1",\
+        "EnergyReal_WAC_Sum_Produced",\
+        "InverterEvents","InverterErrors",\
+        "Current_DC_String_1","Current_DC_String_2",\
+        "Voltage_DC_String_1","Voltage_DC_String_2",\
+        "Temperature_Powerstage",\
+        "Voltage_AC_Phase_1","Voltage_AC_Phase_2","Voltage_AC_Phase_3",\
+        "Current_AC_Phase_1","Current_AC_Phase_2","Current_AC_Phase_3",\
+        "PowerReal_PAC_Sum"]
+
+        complete_archive_data = dict()
+
+        for item in archive_fetchem:
+            data = self.GetArchiveData("System","Detail","True",False,False,item,"Inverter",1)["Data"]["inverter/1"]["Data"]
+
+            vals = data[data.keys()[0]]["Values"] # is a dict
+            unit = data[data.keys()[0]]["Unit"] # is a string
+
+            complete_archive_data[item] = [vals,unit]
+
+        return complete_archive_data
 
 if __name__ == "__main__": # test
-    api = solarapi("192.168.3.110")
+    api = solarapi("192.168.3.110",True)
 
-    api.GetArchiveData("System","Detail","False",False,False,"Current_DC_String_1","Inverter",1)
+    api.GetLoggerInfo()
+
 
     api.GetInverterRealtimeData("System")
     api.GetInverterRealtimeData("Device",1,"CumulationInverterData")
@@ -132,8 +161,9 @@ if __name__ == "__main__": # test
     api.GetInverterRealtimeData("Device",1,"3PInverterData")
     api.GetInverterRealtimeData("Device",1,"MinMaxInverterData")
 
+    api.GetAllArchiveData()
+
     #for i in range(0,199):
     #    print i
     #    api.GetStringRealtimeData("Device",i)
 
-    api.GetLoggerInfo()
