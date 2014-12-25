@@ -129,7 +129,7 @@ class solarapi:
         archive_fetchem = ["TimeSpanInSec",\
         #"Digital_PowerManagementRelay_Out_1",\
         "EnergyReal_WAC_Sum_Produced",\
-        "InverterEvents","InverterErrors",\
+        #"InverterEvents","InverterErrors",\
         "Current_DC_String_1","Current_DC_String_2",\
         "Voltage_DC_String_1","Voltage_DC_String_2",\
         "Temperature_Powerstage",\
